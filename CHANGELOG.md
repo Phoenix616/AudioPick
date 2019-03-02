@@ -1,5 +1,8 @@
 # CHANGELOG
 
+### AudioPick-0.2.3 - 2019-03-02
+- store audio device name instead of index to fix issues when devices get added/removed. One downside: Renaming a device will revert to the default one.
+
 ### AudioPick-0.2.2 - 2016-05-21
 - going stable
 - revert `page_action back` to `browser_action`
