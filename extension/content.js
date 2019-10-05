@@ -37,16 +37,17 @@ function register_message_listener() {
 	chrome.runtime.onMessage.addListener(
 		function(request, sender, sendResponse) {
 			if (request.message === "browser_action_commit" ) {
-				log('Received message: browser_action_commit, sink_no: ' + request.sink_no + ', sink_name: ' + request.sink_name);
+				log('Received message: browser_action_commit, sink_no: ' + request.sink_no + ', sink_name: ' + request.sink_name + ', sink_id: ' + request.sink_id);
 				if (request.sink_no != undefined) {
 					sink_no = request.sink_no;
+					sink_id = request.sink_id;
 					sink_name = request.sink_name;
 					get_devices(); // --> inspect_device_infos() --> update_all_sinks()
 				}
 			} else if (request.message == "report_sink_no") {
 				log('Received message: report_sink_no');
-				log('Reply with: sink_no: ' + sink_no + ', sink_name: ' + sink_name);
-				sendResponse({'sink_no': sink_no, 'sink_name': sink_name});
+				log('Reply with: sink_no: ' + sink_no + ', sink_name: ' + sink_name + ', sink_id: ' + sink_id);
+				sendResponse({'sink_no': sink_no, 'sink_name': sink_name, 'sink_id': sink_id});
 			}
 		}
 	)
@@ -126,12 +127,12 @@ function get_devices() {
 
 function inspect_devices(deviceInfos) {
 	let deviceInfo;
-	log('Inspecting Devices: ' + deviceInfos.length + ' device(s) total (audio/video input/output)');
+	log('Inspecting Devices: ' + deviceInfos.length + ' device(s) total (audio/video input/output) for ' + sink_name);
 	let found = false;
 	for (var i = 0; i != deviceInfos.length; i++) {
 		deviceInfo = deviceInfos[i];
-		//log('  Devices[' + i + ']: ' + deviceInfo.kind + ': ' + deviceInfo.deviceId);
-		if (deviceInfo.kind == 'audiooutput' && deviceInfo.label == sink_name) {
+		log('  Devices[' + i + ']: ' + deviceInfo.kind + ': ' + deviceInfo.label + ' (' + deviceInfo.deviceId + ')');
+		if (deviceInfo.kind == 'audiooutput' && (deviceInfo.label == sink_name || deviceInfo.id == sink_id || i == sink_no)) {
 			log('Selecting Devices[' + i + ']: ' + deviceInfo.label + " (" + deviceInfo.deviceId + ")");
 			sink_id = deviceInfo.deviceId;
 			sink_no = i;
@@ -142,7 +143,7 @@ function inspect_devices(deviceInfos) {
 	if (!found) {
 		for (var i = 0; i != deviceInfos.length; i++) {
 			deviceInfo = deviceInfos[i];
-			//log('  Devices[' + i + ']: ' + deviceInfo.kind + ': ' + deviceInfo.deviceId);
+			log('  Devices[' + i + ']: ' + deviceInfo.kind + ': ' + deviceInfo.label + ' (' + deviceInfo.deviceId + ')');
 			if (deviceInfo.kind == 'audiooutput') {
 				log(sink_name + ' not found! Selecting Devices[' + i + ']: ' + deviceInfo.label + " (" + deviceInfo.deviceId + ")");
 				sink_id = deviceInfo.deviceId;
